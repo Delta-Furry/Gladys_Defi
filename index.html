@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>PIRATAS VR</title>
+<link rel="icon" type="image/jpg" href="./Assets/icongame.jpg"/>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #85929E;
+    color: white;
+    font-family: Arial, sans-serif;
+  }
+  #boton {
+    background-color: white;
+    color: black;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 40px;
+    cursor: pointer;
+    z-index: 10;
+  }
+  #boton p {
+    font-size: 20px;
+    margin-top: 10px;
+  }
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+  }
+</style>
+</head>
+<body>
+
+<!-- Div inicial para activar VR -->
+<div id="boton">
+  Da clic en + para iniciar VR
+  <p>(  ) pulsa Esc para salir</p>
+</div>
+
+<!-- Canvas para WebGL -->
+<canvas id="myCanvas"></canvas>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./js/three.module.js",
+    "three/VRButton": "./js/VRButton.js"
+  }
+}
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { VRButton } from 'three/VRButton';
+
+  // Importar escenarios (deben exportar funciones que retornan objetos THREE.Group)
+  import ESC01 from "./js/Brenda_PREP.js";
+  import ESC02 from "./js/Crist_PREP.js";
+  import ESC03 from "./js/Mauricio_PREP.js";
+  import ESC04 from "./js/Lyn_PREP.js";
+
+  // Renderer
+  const canvas = document.getElementById('myCanvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x85929E);
+
+  // Habilitar WebXR
+  renderer.xr.enabled = true;
+  renderer.xr.setReferenceSpaceType('local');
+
+  document.body.appendChild(renderer.domElement);
+
+  // Botón para activar VR
+  document.body.appendChild(VRButton.createButton(renderer));
+
+  // Escena y cámara
+  const scene = new THREE.Scene();
+
+  const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 4, 40); // posición inicial
+
+  // Luces
+  const light1 = new THREE.AmbientLight(0xffffff, 0.2);
+  scene.add(light1);
+
+  // Añadir escenarios
+  scene.add(ESC01({x:0, y:0, z:0}));
+  scene.add(ESC02({x:0, y:10, z:-200}));
+  scene.add(ESC03({x:-200, y:10, z:-200}));
+  scene.add(ESC04({x:-200, y:10, z:0}));
+
+  // Cruz central para posición (Guiar la vista)
+  const geometryx = new THREE.BoxGeometry(0.0075, 0.05, 0.075);
+  const materialx = new THREE.MeshNormalMaterial({side: THREE.DoubleSide});
+  const meshx = new THREE.Mesh(geometryx, materialx);
+  meshx.position.set(0, 0, 0);
+  const geometryx2 = new THREE.BoxGeometry(0.05, 0.0075, 0.075);
+  const meshx2 = new THREE.Mesh(geometryx2, materialx);
+  meshx2.position.set(0, 0, 0);
+  camera.add(meshx, meshx2);
+  scene.add(camera);
+
+  // Ajustar tamaño al cambiar ventana
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+
+  // Ocultar div al dar click
+  const boton = document.getElementById('boton');
+  boton.addEventListener('click', () => {
+    boton.style.display = 'none';
+  });
+
+  // Render loop usando setAnimationLoop para WebXR
+  function render() {
+    renderer.render(scene, camera);
+  }
+  renderer.setAnimationLoop(render);
+
+</script>
+
+</body>
+</html>
